@@ -48,14 +48,14 @@
         
         // Load Ghosty sprite
         const ghostyImage = new Image();
-        ghostyImage.src = '../../assets/ghosty.png';
+        ghostyImage.src = 'assets/sprites/ghosty.png';
         
         let ghostyLoaded = false;
         ghostyImage.onload = () => { ghostyLoaded = true; };
         
         // Load sound effects
-        const jumpSound = new Audio('../../assets/jump.wav');
-        const gameOverSound = new Audio('../../assets/game_over.wav');
+        const jumpSound = new Audio('assets/sounds/jump.wav');
+        const gameOverSound = new Audio('assets/sounds/game_over.wav');
         
         // Game constants
         const GRAVITY = 0.6;
