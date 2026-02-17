@@ -1,0 +1,15 @@
+# Wall Sprite Placeholder
+
+This file is a placeholder for the wall obstacle sprite.
+
+## To add pixel art:
+
+1. Create an 80x600 pixel image in your favorite pixel art tool
+2. Design a simple wall texture (brick pattern, pipes, etc.)
+3. Save as PNG
+4. Name it `wall.png` and place in this directory
+5. In Godot, replace the ColorRect in the Wall scene with a Sprite2D node
+6. Assign the wall.png texture to the Sprite2D
+
+## Alternative:
+The green ColorRect placeholder works fine for gameplay!

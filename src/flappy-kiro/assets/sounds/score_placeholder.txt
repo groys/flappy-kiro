@@ -1,0 +1,4 @@
+# Placeholder for score sound effect
+# In a real implementation, this would be a .wav or .ogg file
+# 
+# Recommended: Short "ding" or "coin" sound (0.1-0.2 seconds)

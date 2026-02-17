@@ -1,0 +1,8 @@
+# Placeholder for jump sound effect
+# In a real implementation, this would be a .wav or .ogg file
+# For now, you can:
+# 1. Generate sounds using tools like sfxr, bfxr, or ChipTone
+# 2. Record your own sounds
+# 3. Use free sound libraries like freesound.org
+# 
+# Recommended: Short "whoosh" or "flap" sound (0.1-0.2 seconds)

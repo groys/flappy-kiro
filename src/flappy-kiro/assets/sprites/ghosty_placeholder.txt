@@ -1,0 +1,21 @@
+# Ghosty Sprite Placeholder
+
+This file is a placeholder for the Ghosty character sprite.
+
+## To add pixel art:
+
+1. Create a 40x40 pixel image in your favorite pixel art tool (Aseprite, Piskel, GIMP, etc.)
+2. Design a simple ghost character (white/gray with eyes)
+3. Save as PNG with transparency
+4. Name it `ghosty.png` and place in this directory
+5. In Godot, replace the ColorRect in the Player node with a Sprite2D node
+6. Assign the ghosty.png texture to the Sprite2D
+
+## Quick pixel art tips:
+- Keep it simple (this is a 40x40 sprite)
+- Use 2-3 colors max
+- Make sure it's clearly visible against the blue background
+- Add simple eyes for character
+
+## Alternative:
+You can continue using the white ColorRect placeholder - it works fine for gameplay testing!

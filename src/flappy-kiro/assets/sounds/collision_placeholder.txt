@@ -1,0 +1,4 @@
+# Placeholder for collision sound effect
+# In a real implementation, this would be a .wav or .ogg file
+# 
+# Recommended: Short "crash" or "thud" sound (0.2-0.3 seconds)

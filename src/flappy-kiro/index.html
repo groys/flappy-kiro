@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Kiro</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #2c3e50;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #34495e;
+            background: #87CEEB;
+            display: block;
+            margin: 0 auto;
+        }
+        #info {
+            color: white;
+            margin-top: 20px;
+        }
+        #leaderboard {
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="info">Press SPACEBAR to start/jump</div>
+        <div id="leaderboard"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game constants
+        const GRAVITY = 0.6;
+        const JUMP_STRENGTH = -10;
+        const PLAYER_X = 200;
+        const WALL_WIDTH = 80;
+        const GAP_SIZE = 200;
+        const WALL_SPEED_BASE = 3;
+        
+        // Game state
+        let gameState = 'START'; // START, PLAYING, GAME_OVER
+        let player = { x: PLAYER_X, y: 300, width: 40, height: 40, velocity: 0 };
+        let walls = [];
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('flappyKiroHighScore') || '0');
+        let leaderboard = JSON.parse(localStorage.getItem('flappyKiroLeaderboard') || '[]');
+        let wallSpawnTimer = 0;
+        let wallSpeed = WALL_SPEED_BASE;
+        
+        // Input handling
+        let spacePressed = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !spacePressed) {
+                spacePressed = true;
+                handleInput();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                spacePressed = false;
+            }
+        });
+        
+        function handleInput() {
+            if (gameState === 'START') {
+                startGame();
+            } else if (gameState === 'PLAYING') {
+                player.velocity = JUMP_STRENGTH;
+            } else if (gameState === 'GAME_OVER') {
+                restartGame();
+            }
+        }
+        
+        function startGame() {
+            gameState = 'PLAYING';
+            player.y = 300;
+            player.velocity = 0;
+            walls = [];
+            score = 0;
+            wallSpeed = WALL_SPEED_BASE;
+            wallSpawnTimer = 0;
+        }
+        
+        function restartGame() {
+            startGame();
+        }
+        
+        function spawnWall() {
+            const minGapY = 150;
+            const maxGapY = 450;
+            const gapY = Math.random() * (maxGapY - minGapY) + minGapY;
+            
+            walls.push({
+                x: canvas.width,
+                gapY: gapY,
+                scored: false
+            });
+        }
+        
+        function updateGame() {
+            if (gameState !== 'PLAYING') return;
+            
+            // Update player
+            player.velocity += GRAVITY;
+            player.y += player.velocity;
+            
+            // Check ground collision
+            if (player.y + player.height >= canvas.height - 50) {
+                gameOver();
+                return;
+            }
+            
+            // Check ceiling collision
+            if (player.y <= 0) {
+                player.y = 0;
+                player.velocity = 0;
+            }
+            
+            // Update walls
+            wallSpawnTimer++;
+            if (wallSpawnTimer > 120) { // Spawn every 2 seconds at 60fps
+                spawnWall();
+                wallSpawnTimer = 0;
+            }
+            
+            // Update difficulty
+            wallSpeed = WALL_SPEED_BASE * (1 + Math.floor(score / 5) * 0.05);
+            
+            for (let i = walls.length - 1; i >= 0; i--) {
+                const wall = walls[i];
+                wall.x -= wallSpeed;
+                
+                // Check collision
+                if (player.x + player.width > wall.x && 
+                    player.x < wall.x + WALL_WIDTH) {
+                    // Check if player is in gap
+                    if (player.y < wall.gapY - GAP_SIZE / 2 || 
+                        player.y + player.height > wall.gapY + GAP_SIZE / 2) {
+                        gameOver();
+                        return;
+                    }
+                }
+                
+                // Check scoring
+                if (!wall.scored && wall.x + WALL_WIDTH < player.x) {
+                    wall.scored = true;
+                    score++;
+                }
+                
+                // Remove off-screen walls
+                if (wall.x + WALL_WIDTH < 0) {
+                    walls.splice(i, 1);
+                }
+            }
+        }
+        
+        function gameOver() {
+            gameState = 'GAME_OVER';
+            
+            // Update high score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('flappyKiroHighScore', highScore.toString());
+            }
+            
+            // Update leaderboard
+            leaderboard.push({
+                score: score,
+                date: new Date().toLocaleString()
+            });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('flappyKiroLeaderboard', JSON.stringify(leaderboard));
+            
+            displayLeaderboard();
+        }
+        
+        function displayLeaderboard() {
+            const leaderboardDiv = document.getElementById('leaderboard');
+            let html = '<h3>LEADERBOARD</h3>';
+            leaderboard.forEach((entry, index) => {
+                html += `<div>${index + 1}. Score: ${entry.score}</div>`;
+            });
+            leaderboardDiv.innerHTML = html;
+        }
+        
+        function drawGame() {
+            // Clear canvas
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Draw walls
+            ctx.fillStyle = '#2ECC71';
+            walls.forEach(wall => {
+                // Top wall
+                ctx.fillRect(wall.x, 0, WALL_WIDTH, wall.gapY - GAP_SIZE / 2);
+                // Bottom wall
+                ctx.fillRect(wall.x, wall.gapY + GAP_SIZE / 2, WALL_WIDTH, canvas.height - (wall.gapY + GAP_SIZE / 2));
+            });
+            
+            // Draw player (Ghosty)
+            ctx.fillStyle = '#EEEEEE';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Draw score
+            ctx.fillStyle = 'white';
+            ctx.font = '32px Arial';
+            ctx.fillText(`Score: ${score}`, 20, 40);
+            ctx.font = '20px Arial';
+            ctx.fillText(`High Score: ${highScore}`, 20, 70);
+            
+            // Draw game state messages
+            if (gameState === 'START') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('FLAPPY KIRO', canvas.width / 2, canvas.height / 2 - 50);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press SPACEBAR to Start', canvas.width / 2, canvas.height / 2 + 20);
+                ctx.textAlign = 'left';
+            } else if (gameState === 'GAME_OVER') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 50);
+                ctx.font = '32px Arial';
+                ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press SPACEBAR to Restart', canvas.width / 2, canvas.height / 2 + 60);
+                ctx.textAlign = 'left';
+            }
+        }
+        
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start game loop
+        gameLoop();
+    </script>
+</body>
+</html>

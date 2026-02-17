@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flappy Kiro Test</title>
+</head>
+<body style="margin:0; background:#2c3e50; display:flex; justify-content:center; align-items:center; height:100vh;">
+    <div style="text-align:center;">
+        <h1 style="color:white;">Flappy Kiro</h1>
+        <canvas id="game" width="800" height="600" style="border:2px solid white; background:#87CEEB;"></canvas>
+        <p style="color:white;">Press SPACEBAR to play</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        
+        // Test: Draw something immediately
+        ctx.fillStyle = 'white';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('FLAPPY KIRO', 400, 250);
+        ctx.font = '24px Arial';
+        ctx.fillText('Press SPACEBAR to Start', 400, 320);
+        ctx.fillText('(If you see this, the canvas works!)', 400, 360);
+        
+        // Draw test player
+        ctx.fillStyle = '#EEEEEE';
+        ctx.fillRect(200, 300, 40, 40);
+        
+        // Draw test ground
+        ctx.fillStyle = '#8B7355';
+        ctx.fillRect(0, 550, 800, 50);
+        
+        alert('If you see a blue canvas with text, the HTML is working! Click OK to start the game.');
+        
+        // Now load the actual game code
+        let player = {x:200, y:300, w:40, h:40, vy:0};
+        let walls = [];
+        let score = 0;
+        let playing = false;
+        let timer = 0;
+        
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                if (!playing) playing = true;
+                player.vy = -10;
+                e.preventDefault();
+            }
+        });
+        
+        function loop() {
+            // Clear
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, 800, 600);
+            
+            // Ground
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, 550, 800, 50);
+            
+            if (playing) {
+                // Update player
+                player.vy += 0.6;
+                player.y += player.vy;
+                
+                // Spawn walls
+                timer++;
+                if (timer > 120) {
+                    walls.push({x:800, gap:Math.random()*300+150});
+                    timer = 0;
+                }
+                
+                // Update walls
+                walls.forEach((w,i) => {
+                    w.x -= 3;
+                    if (w.x < -80) walls.splice(i,1);
+                    if (w.x < player.x && !w.scored) {
+                        w.scored = true;
+                        score++;
+                    }
+                    
+                    // Draw walls
+                    ctx.fillStyle = '#2ECC71';
+                    ctx.fillRect(w.x, 0, 80, w.gap-100);
+                    ctx.fillRect(w.x, w.gap+100, 80, 600);
+                    
+                    // Collision
+                    if (player.x+player.w > w.x && player.x < w.x+80) {
+                        if (player.y < w.gap-100 || player.y+player.h > w.gap+100) {
+                            playing = false;
+                            alert('Game Over! Score: ' + score);
+                            player.y = 300;
+                            player.vy = 0;
+                            walls = [];
+                            score = 0;
+                        }
+                    }
+                });
+                
+                // Ground collision
+                if (player.y > 510) {
+                    playing = false;
+                    alert('Game Over! Score: ' + score);
+                    player.y = 300;
+                    player.vy = 0;
+                    walls = [];
+                    score = 0;
+                }
+            }
+            
+            // Draw player
+            ctx.fillStyle = '#EEEEEE';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            
+            // Draw score
+            ctx.fillStyle = 'white';
+            ctx.font = '32px Arial';
+            ctx.fillText('Score: ' + score, 20, 40);
+            
+            if (!playing) {
+                ctx.textAlign = 'center';
+                ctx.fillText('Press SPACEBAR', 400, 300);
+                ctx.textAlign = 'left';
+            }
+            
+            requestAnimationFrame(loop);
+        }
+        
+        loop();
+    </script>
+</body>
+</html>
